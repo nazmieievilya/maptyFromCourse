@@ -64,6 +64,9 @@ class App {
     this._getPosition();
     form.addEventListener('submit', this._newWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
+    document
+      .querySelector('.workouts')
+      .addEventListener('click', this._moveToPopup.bind(this));
   }
   _getPosition() {
     if (navigator.geolocation) {
@@ -129,10 +132,8 @@ class App {
   }
   _renderWorkout(workout) {
     let html = `
-    <li class="workout workout--${workout.type}" data-id="${workout.id}}">
-          <h2 class="workout__title">${
-            workout.type === 'running' ? 'Running' : 'Cycling'
-          } on April 5</h2>
+    <li class="workout workout--${workout.type}" data-id="${workout.id}">
+          <h2 class="workout__title">${workout.description}</h2>
           <div class="workout__details">
             <span class="workout__icon">${
               workout.type === 'running' ? '🦶🏼' : '🚴‍♀️'
@@ -182,7 +183,9 @@ class App {
       autoClose: false,
       closeOnClick: false,
       className: `${workout.type}-popup`,
-    }).setContent('Шо ти<br />я карта<br /> я карта</p>');
+    }).setContent(
+      ` ${workout.type === 'running' ? '🦶🏼' : '🚴‍♀️'} ${workout.description} `
+    );
 
     L.marker([lat, lng]).addTo(this.#map).bindPopup(popup).openPopup();
   }
@@ -192,14 +195,22 @@ class App {
     this.#mapEvent = mapE;
   }
   _hideForm() {
+    form.style.display = 'none';
     form.classList.add('hidden');
+    setTimeout(() => (form.style.display = 'grid'), 1000);
   }
   _toggleElevationField(e) {
     e.preventDefault();
     inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
     inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
   }
-  _moveToPopup() {}
+  _moveToPopup(e) {
+    const workoutElement = e.target.closest('.workout');
+    if (!workoutElement) return;
+    const workout = this.workouts.find(w => w.id === workoutElement.dataset.id);
+
+    this.#map.setView(workout.coords);
+  }
   _rest() {}
 }
 const app = new App();
