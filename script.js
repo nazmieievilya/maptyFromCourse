@@ -4,14 +4,27 @@
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const form = document.querySelector('.form');
+const formEdit = document.querySelector('.Editform');
+
 const containerWorkouts = document.querySelector('.workouts');
 const inputType = document.querySelector('.form__input--type');
 const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
+
+const inputTypeEdit = document.querySelector('.form__input--typeEdit');
+const inputDistanceEdit = document.querySelector('.form__input--distanceEdit');
+const inputDurationEdit = document.querySelector('.form__input--durationEdit');
+const inputCadenceEdit = document.querySelector('.form__input--cadenceEdit');
+const inputElevationEdit = document.querySelector(
+  '.form__input--elevationEdit'
+);
+const modal = document.querySelector('.modal');
+const overlay = document.querySelector('.overlay');
+const closeModal = document.querySelector('.btn--close-modal');
 class Workout {
-  clicks = 0;
+  workoutToEdit;
   date = new Date();
   id = (Date.now() + '').slice(-10);
   constructor(distance, duration, coords) {
@@ -68,8 +81,10 @@ class App {
     this._getPosition();
 
     form.addEventListener('submit', this._newWorkout.bind(this));
+    formEdit.addEventListener('submit', this._editWorkout);
     inputType.addEventListener('change', this._toggleElevationField);
-
+    inputTypeEdit.addEventListener('change', this._toggleElevationFieldEdit);
+    closeModal.addEventListener('click', this._toggleForm);
     this._getLocalStorage();
   }
   _getPosition() {
@@ -144,6 +159,9 @@ class App {
   _renderWorkout(workout) {
     let html = `
     <li class="workout workout--${workout.type}" data-id="${workout.id}">
+          <div class="edit">
+            <h2>Edit📝</h2>
+          </div>
           <h2 class="workout__title">${workout.description}</h2>
           <div class="workout__details">
             <span class="workout__icon">${
@@ -215,8 +233,26 @@ class App {
     inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
     inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
   }
+  _toggleElevationFieldEdit(e) {
+    e.preventDefault();
+    inputCadenceEdit
+      .closest('.form__row')
+      .classList.toggle('form__row--hidden');
+    inputElevationEdit
+      .closest('.form__row')
+      .classList.toggle('form__row--hidden');
+  }
   _moveToPopup(e) {
     const workoutElement = e.target.closest('.workout');
+    const editWorkout = e.target.closest('.edit');
+    if (editWorkout) {
+      this.workoutToEdit = this.workouts.find(
+        w => w.id === workoutElement.dataset.id
+      );
+      console.log(this.workoutToEdit);
+      return this._toggleForm();
+    }
+    console.log(editWorkout);
     if (!workoutElement) return;
     const workout = this.workouts.find(w => w.id === workoutElement.dataset.id);
 
@@ -226,7 +262,19 @@ class App {
         duration: 0.7,
       },
     });
-    workout.click();
+  }
+  _toggleForm() {
+    overlay.classList.toggle('hidden');
+    modal.classList.toggle('hidden');
+  }
+  _editWorkout(id) {
+    id.preventDefault();
+    const type = inputTypeEdit.value;
+    const distance = inputDistanceEdit.value;
+    const duration = inputDurationEdit.value;
+    const cadence = inputCadenceEdit.value;
+    const elevGain = inputElevationEdit.value;
+    console.log(type, distance, duration, cadence, elevGain);
   }
   _setLocalStorage() {
     localStorage.setItem('workouts', JSON.stringify(this.workouts));
@@ -241,6 +289,13 @@ class App {
     // this.workouts.__proto__ = Object.create(Workout.prototype);
     return workoutsLS;
   }
-  _rest() {}
+  reset() {
+    localStorage.removeItem('workouts');
+    location.reload();
+  }
 }
 const app = new App();
+
+// ADD ABILITY TO EDIT WORKOUT
+// Add note icon to workout element
+// Handling click event and opening form
